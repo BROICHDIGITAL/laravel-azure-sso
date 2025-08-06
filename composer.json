@@ -17,13 +17,13 @@
   },
   "autoload": {
     "psr-4": {
-      "broichdigital\\AzureSso\\": "src/"
+      "Broichdigital\\AzureSso\\": "src/"
     }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "broichdigital\\AzureSso\\Providers\\AzureSsoServiceProvider"
+        "Broichdigital\\AzureSso\\Providers\\AzureSsoServiceProvider"
       ]
     }
   }

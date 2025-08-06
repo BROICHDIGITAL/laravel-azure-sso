@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use broichdigital\AzureSso\Controllers\AzureSsoController;
+use Broichdigital\AzureSso\Controllers\AzureSsoController;
 
 Route::middleware('azure.tenant')->group(function () {
     Route::get('sso/login',    [AzureSsoController::class, 'redirectToProvider'])

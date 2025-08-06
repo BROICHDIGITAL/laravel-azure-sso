@@ -1,6 +1,6 @@
 <?php
 
-namespace broichdigital\AzureSso\Controllers;
+namespace Broichdigital\AzureSso\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;

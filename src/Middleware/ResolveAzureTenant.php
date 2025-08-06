@@ -1,6 +1,6 @@
 <?php
 
-namespace broichdigital\AzureSso\Middleware;
+namespace Broichdigital\AzureSso\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
