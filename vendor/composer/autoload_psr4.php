@@ -6,5 +6,5 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'broichdigital\\AzureSso\\' => array($baseDir . '/src'),
+    'Broichdigital\\AzureSso\\' => array($baseDir . '/src'),
 );

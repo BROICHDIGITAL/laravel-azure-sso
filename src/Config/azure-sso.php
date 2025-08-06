@@ -21,6 +21,7 @@ return [
     // Ziel nach lokalem Logout
     'post_logout_redirect' => env('AZURE_SSO_POST_LOGOUT_REDIRECT', '/'),
 
+    'authority' => env('AZURE_AD_AUTHORITY', env('AZURE_AD_TENANT_ID')),
     
      // Für spätere Multi-Tenant-Support:
     'tenants' => [
