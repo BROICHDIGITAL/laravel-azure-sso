@@ -10,7 +10,7 @@ class AzureSsoServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Nur Config mergen
+        // Config mergen
         $this->mergeConfigFrom(
             __DIR__ . '/../Config/azure-sso.php',
             'azure-sso'
@@ -19,7 +19,7 @@ class AzureSsoServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // 1) Config publishen
+        // 1) Config publizieren
         $this->publishes([
             __DIR__ . '/../Config/azure-sso.php' => config_path('azure-sso.php'),
         ], 'config');
@@ -29,18 +29,18 @@ class AzureSsoServiceProvider extends ServiceProvider
 
         // 3) Middleware-Alias registrieren
         $this->app->make(Router::class)
-              ->aliasMiddleware(
-                  'azure.tenant',
-                  \Broichdigital\AzureSso\Middleware\ResolveAzureTenant::class
-              );
+            ->aliasMiddleware(
+                'azure.tenant',
+                \Broichdigital\AzureSso\Middleware\ResolveAzureTenant::class
+            );
 
-        // 4) Migrationen laden
-        $this->loadMigrationsFrom(__DIR__ . '/../../src/Database/migrations');
+        // 4) Migrationen laden (falls vorhanden)
+        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 
         // 5) Socialite-Provider registrieren
         Socialite::extend('azure-sso', function ($app) {
-            $cfg       = config('azure-sso');
-            $authority = $cfg['authority'];
+            $cfg    = config('azure-sso');
+            $tenant = $cfg['tenant'] ?? $cfg['tenant_id'] ?? 'common';
 
             return Socialite::buildProvider(
                 \SocialiteProviders\Microsoft\Provider::class,
@@ -48,7 +48,8 @@ class AzureSsoServiceProvider extends ServiceProvider
                     'client_id'     => $cfg['client_id'],
                     'client_secret' => $cfg['client_secret'],
                     'redirect'      => $cfg['redirect'],
-                    'tenant'        => $authority,
+                    'tenant'        => $tenant,
+                    // optional: 'guzzle' => $cfg['guzzle'] ?? [],
                 ]
             );
         });
