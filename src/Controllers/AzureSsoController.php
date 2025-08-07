@@ -20,12 +20,9 @@ class AzureSsoController extends Controller
             ]);
 
         return Socialite::driver('azure-sso')
-                        ->stateless()
-                        ->tenant(config('azure-sso.authority'))
-                        ->with([
-                            'response_mode' => 'query',
-                        ])
-                        ->redirect();
+                           ->stateless()
+                           ->with(['response_mode' => 'query'])
+                           ->redirect();
     }
 
     /**
@@ -46,12 +43,11 @@ class AzureSsoController extends Controller
                 'fullUrl: '.$request->fullUrl(),
                 'query: '.json_encode($request->query())
             );
-            
+
         // Access-Token & User abrufen – jetzt gegen deinen Tenant-Endpoint
         $azureUser = Socialite::driver('azure-sso')
-                              ->stateless()
-                              ->tenant(config('azure-sso.authority'))
-                              ->user();
+                                 ->stateless()
+                                 ->user();
 
         // Synchronisieren oder neu anlegen:
         $user = User::updateOrCreate(
