@@ -15,6 +15,11 @@ class AzureSsoController extends Controller
      */
     public function redirectToProvider(Request $request)
     {
+        \Log::debug('DEBUG Azure Authority (redirect):', [
+                'authority' => config('azure-sso.authority'),
+            ]);
+            dd('Authority in redirectToProvider:', config('azure-sso.authority'));
+
         return Socialite::driver('azure-sso')
                         ->stateless()
                         ->tenant(config('azure-sso.authority'))
@@ -29,6 +34,12 @@ class AzureSsoController extends Controller
      */
     public function handleProviderCallback(Request $request)
     {
+
+        \Log::debug('DEBUG Azure Authority (callback):', [
+                'authority' => config('azure-sso.authority'),
+            ]);
+            dd('Authority in handleProviderCallback:', config('azure-sso.authority'));
+            
         // Access-Token & User abrufen – jetzt gegen deinen Tenant-Endpoint
         $azureUser = Socialite::driver('azure-sso')
                               ->stateless()
