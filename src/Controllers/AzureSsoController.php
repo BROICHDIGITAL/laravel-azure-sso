@@ -15,14 +15,18 @@ class AzureSsoController extends Controller
      */
     public function redirectToProvider(Request $request)
     {
-        $redirect = Socialite::driver('azure-sso')
-                             ->stateless()
-                             ->with(['response_mode' => 'query'])
-                             ->redirect();
+        $tenant = config('azure-sso.tenant');
 
-        \Log::debug('Azure Redirect URL:', ['url' => $redirect->getTargetUrl()]);
+        \Log::debug('🐞 Forcing tenant on redirect:', ['tenant' => $tenant]);
 
-        return $redirect;
+        return Socialite::driver('azure-sso')
+                        ->stateless()
+                        // zwinge tenant und response_mode
+                        ->with([
+                            'tenant'        => $tenant,
+                            'response_mode' => 'query',
+                        ])
+                        ->redirect();
     }
 
     /**
@@ -30,24 +34,15 @@ class AzureSsoController extends Controller
      */
     public function handleProviderCallback(Request $request)
     {
+        \Log::debug('🐞 Callback tenant:', ['tenant' => config('azure-sso.tenant')]);
+        \Log::debug('🐞 Callback fullUrl:', ['url' => $request->fullUrl()]);
 
-        // 1) Logge die tatsächlich aufgerufene URL
-            \Log::debug('DEBUG Callback URL:', [
-                'url'       => $request->fullUrl(),
-                'authority' => config('azure-sso.authority'),
-            ]);
+        // Jetzt sollte ?code=… in fullUrl stehen
+        // dd($request->fullUrl(), $request->query());
 
-            // 2) Zeige dir Query-Parameter im Browser
-            dd(
-                'Callback reached',
-                'fullUrl: '.$request->fullUrl(),
-                'query: '.json_encode($request->query())
-            );
-
-        // Access-Token & User abrufen – jetzt gegen deinen Tenant-Endpoint
         $azureUser = Socialite::driver('azure-sso')
-                                 ->stateless()
-                                 ->user();
+                              ->stateless()
+                              ->user();
 
         // Synchronisieren oder neu anlegen:
         $user = User::updateOrCreate(
