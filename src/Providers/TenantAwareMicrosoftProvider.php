@@ -7,13 +7,13 @@ use SocialiteProviders\Microsoft\Provider as BaseProvider;
 class TenantAwareMicrosoftProvider extends BaseProvider
 {
     /**
-     * Authorize-URL mit Tenant statt /common
+     * Autorisierungs-URL mit Tenant statt /common
      */
     protected function getAuthUrl($state): string
     {
         $tenant = $this->getConfig('tenant', 'common');
 
-        return $this->buildUrlFromBase(
+        return $this->buildAuthUrlFromBase(          // ← neuer Methodenname
             "https://login.microsoftonline.com/{$tenant}/oauth2/v2.0/authorize",
             $this->getCodeFields($state)
         );
