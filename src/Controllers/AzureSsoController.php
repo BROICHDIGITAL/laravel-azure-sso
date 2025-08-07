@@ -25,6 +25,9 @@ class AzureSsoController extends Controller
      */
     public function handleProviderCallback(Request $request)
     {
+        \Log::debug('Azure Callback – Query:', $request->query());
+        \Log::debug('Azure Callback – Payload:', $request->all());
+        dd($request->method(), $request->query(), $request->all());
         $azureUser = Socialite::driver('azure-sso')
                               ->stateless()
                               ->user();
