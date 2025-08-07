@@ -13,13 +13,10 @@ class AzureSsoController extends Controller
     /**
      * Redirect zum Microsoft-Login (Tenant-spezifisch & response_mode=query).
      */
-    public function redirectToProvider(Request $request)
+    public function redirectToProvider()
     {
-        $tenant = config('azure-sso.tenant');
-
         return Socialite::driver('azure-sso')
             ->stateless()
-            ->tenant($tenant)              // ← wichtig!
             ->with(['response_mode' => 'query'])
             ->redirect();
     }
@@ -29,11 +26,9 @@ class AzureSsoController extends Controller
      */
     public function handleProviderCallback(Request $request)
     {
-        $tenant = config('azure-sso.tenant');
-
+        // ggf. Error-Check einbauen
         $azureUser = Socialite::driver('azure-sso')
             ->stateless()
-            ->tenant($tenant)              // ← auch hier
             ->user();
 
         // Synchronisieren oder neu anlegen:
