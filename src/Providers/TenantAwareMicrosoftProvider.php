@@ -7,9 +7,9 @@ use SocialiteProviders\Microsoft\Provider as BaseProvider;
 class TenantAwareMicrosoftProvider extends BaseProvider
 {
     /**
-     *  Authorize-URL mit Tenant statt /common
+     * Authorize-URL mit Tenant statt /common
      */
-    protected function getAuthUrl($state)
+    protected function getAuthUrl($state): string
     {
         $tenant = $this->getConfig('tenant', 'common');
 
@@ -20,9 +20,9 @@ class TenantAwareMicrosoftProvider extends BaseProvider
     }
 
     /**
-     *  Token-URL mit Tenant statt /common
+     * Token-URL mit Tenant statt /common
      */
-    protected function getTokenUrl()
+    protected function getTokenUrl(): string
     {
         $tenant = $this->getConfig('tenant', 'common');
 
