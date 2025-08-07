@@ -42,6 +42,9 @@ class AzureSsoServiceProvider extends ServiceProvider
             $cfg    = config('azure-sso');
             $tenant = $cfg['tenant'] ?? $cfg['tenant_id'] ?? 'common';
 
+            \Log::debug('🟢 Azure-SSO tenant in provider:', ['tenant' => $tenant]);
+
+            
             return Socialite::buildProvider(
                 \SocialiteProviders\Microsoft\Provider::class,
                 [
