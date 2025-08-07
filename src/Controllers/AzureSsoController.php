@@ -15,14 +15,14 @@ class AzureSsoController extends Controller
      */
     public function redirectToProvider(Request $request)
     {
-        \Log::debug('DEBUG Azure Authority (redirect):', [
-                'authority' => config('azure-sso.authority'),
-            ]);
+        $redirect = Socialite::driver('azure-sso')
+                             ->stateless()
+                             ->with(['response_mode' => 'query'])
+                             ->redirect();
 
-        return Socialite::driver('azure-sso')
-                           ->stateless()
-                           ->with(['response_mode' => 'query'])
-                           ->redirect();
+        \Log::debug('Azure Redirect URL:', ['url' => $redirect->getTargetUrl()]);
+
+        return $redirect;
     }
 
     /**
