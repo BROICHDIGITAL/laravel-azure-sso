@@ -17,16 +17,11 @@ class AzureSsoController extends Controller
     {
         $tenant = config('azure-sso.tenant');
 
-        \Log::debug('🐞 Forcing tenant on redirect:', ['tenant' => $tenant]);
-
         return Socialite::driver('azure-sso')
-                        ->stateless()
-                        // zwinge tenant und response_mode
-                        ->with([
-                            'tenant'        => $tenant,
-                            'response_mode' => 'query',
-                        ])
-                        ->redirect();
+            ->stateless()
+            ->tenant($tenant)              // ← wichtig!
+            ->with(['response_mode' => 'query'])
+            ->redirect();
     }
 
     /**
@@ -34,15 +29,12 @@ class AzureSsoController extends Controller
      */
     public function handleProviderCallback(Request $request)
     {
-        \Log::debug('🐞 Callback tenant:', ['tenant' => config('azure-sso.tenant')]);
-        \Log::debug('🐞 Callback fullUrl:', ['url' => $request->fullUrl()]);
-
-        // Jetzt sollte ?code=… in fullUrl stehen
-        // dd($request->fullUrl(), $request->query());
+        $tenant = config('azure-sso.tenant');
 
         $azureUser = Socialite::driver('azure-sso')
-                              ->stateless()
-                              ->user();
+            ->stateless()
+            ->tenant($tenant)              // ← auch hier
+            ->user();
 
         // Synchronisieren oder neu anlegen:
         $user = User::updateOrCreate(
