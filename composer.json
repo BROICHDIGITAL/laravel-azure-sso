@@ -3,13 +3,6 @@
   "description": "Laravel Package für Azure-AD SSO (Socialite-basiert)",
   "type": "library",
 
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/SocialiteProviders/Microsoft"
-    }
-  ],
-
   "license": "MIT",
   "authors": [
     {
