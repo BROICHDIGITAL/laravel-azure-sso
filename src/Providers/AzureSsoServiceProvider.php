@@ -21,7 +21,7 @@ class AzureSsoServiceProvider extends ServiceProvider
     public function boot(): void
     {
         /* --------------------------------------------------------------
-         | 1) Config publizieren (optional für Projekte)
+         | 1) Config publizieren (optional fürs Projekt)
          |--------------------------------------------------------------*/
         $this->publishes([
             __DIR__ . '/../Config/azure-sso.php' => config_path('azure-sso.php'),
@@ -35,11 +35,10 @@ class AzureSsoServiceProvider extends ServiceProvider
         /* --------------------------------------------------------------
          | 3) Middleware-Alias registrieren
          |--------------------------------------------------------------*/
-        $this->app->make(Router::class)
-            ->aliasMiddleware(
-                'azure.tenant',
-                \Broichdigital\AzureSso\Middleware\ResolveAzureTenant::class
-            );
+        $this->app->make(Router::class)->aliasMiddleware(
+            'azure.tenant',
+            \Broichdigital\AzureSso\Middleware\ResolveAzureTenant::class
+        );
 
         /* --------------------------------------------------------------
          | 4) Migrationen laden (falls vorhanden)
@@ -47,24 +46,23 @@ class AzureSsoServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 
         /* --------------------------------------------------------------
-         | 5) Socialite-Provider erst NACH vollständigem Boot registrieren
+         | 5) Eigenen Socialite-Treiber registrieren  (azure-tenant)
          |--------------------------------------------------------------*/
-        $this->app->booted(function () {
-            $cfg = config('azure-sso');
+        $cfg = config('azure-sso');
 
-            Socialite::extend('azure-sso', function () use ($cfg) {
-                return Socialite::buildProvider(
-                    TenantAwareMicrosoftProvider::class,
-                    [
-                        'client_id'     => $cfg['client_id'],
-                        'client_secret' => $cfg['client_secret'],
-                        'redirect'      => $cfg['redirect'],
-                        'tenant'        => $cfg['tenant'] ?? $cfg['tenant_id'] ?? 'common',
-                        // optional: 'guzzle' => $cfg['guzzle'] ?? [],
-                    ]
-                );
-            });
+        Socialite::extend('azure-tenant', function () use ($cfg) {
+            return Socialite::buildProvider(
+                TenantAwareMicrosoftProvider::class,
+                [
+                    'client_id'     => $cfg['client_id'],
+                    'client_secret' => $cfg['client_secret'],
+                    'redirect'      => $cfg['redirect'],
+                    'tenant'        => $cfg['tenant'] ?? $cfg['tenant_id'] ?? 'common',
+                    // optional: 'guzzle' => $cfg['guzzle'] ?? [],
+                ]
+            );
         });
     }
+
 
 }
