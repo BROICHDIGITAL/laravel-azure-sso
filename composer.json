@@ -22,7 +22,7 @@
     "php": "^8.1",
     "laravel/framework": "^12.0",
     "laravel/socialite": "^5.0",
-    "socialiteproviders/microsoft": "dev-master as 5.23.0"
+    "socialiteproviders/microsoft": "^5.23"
   },
 
   "autoload": {
