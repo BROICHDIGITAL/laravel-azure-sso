@@ -43,7 +43,7 @@ class AzureSsoServiceProvider extends ServiceProvider
         /* --------------------------------------------------------------
          | 4) Migrationen laden (falls vorhanden)
          |--------------------------------------------------------------*/
-        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
         /* --------------------------------------------------------------
          | 5) Eigenen Socialite-Treiber registrieren  (azure-tenant)
