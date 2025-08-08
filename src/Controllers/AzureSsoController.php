@@ -11,14 +11,24 @@ use Laravel\Socialite\Facades\Socialite;
 class AzureSsoController extends Controller
 {
     /**
-     * Redirect zum Microsoft-Login (tenant-spezifisch & response_mode=query).
+     * Leitet den Benutzer zum Microsoft-Login um
+     * (tenant-spezifisch, response_mode=query).
      */
     public function redirectToProvider()
     {
-        return Socialite::driver('azure-tenant')      // neuer Treiber-Key
+        // Provider-Instanz aufbauen
+        $provider = Socialite::driver('azure-tenant')
             ->stateless()
-            ->with(['response_mode' => 'query'])
-            ->redirect();
+            ->with(['response_mode' => 'query']);
+
+        // Debug-Log: Welche Klasse & welche URL?
+        \Log::debug('SSO Provider', [
+            'class' => get_class($provider),
+            'url'   => $provider->redirect()->getTargetUrl(),
+        ]);
+
+        // Redirect ausführen
+        return $provider->redirect();
     }
 
     /**
@@ -32,11 +42,12 @@ class AzureSsoController extends Controller
                 ->with('error', $request->input('error_description', 'Azure SSO error'));
         }
 
-        $azureUser = Socialite::driver('azure-tenant')  // neuer Treiber-Key
+        // Tenant-spezifischen Treiber verwenden
+        $azureUser = Socialite::driver('azure-tenant')
             ->stateless()
             ->user();
 
-        // Synchronisieren oder neu anlegen
+        // Nutzer synchronisieren oder anlegen
         $user = User::updateOrCreate(
             ['azure_id' => $azureUser->getId()],
             [
@@ -47,7 +58,7 @@ class AzureSsoController extends Controller
             ]
         );
 
-        // Einloggen (optional remember)
+        // Einloggen (inkl. remember-Cookie)
         Auth::login($user, true);
 
         // Weiterleitung nach Login
@@ -63,8 +74,10 @@ class AzureSsoController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return $url = config('azure-sso.logout_url')
-            ? redirect()->away($url)
+        $url = config('azure-sso.logout_url');
+
+        return $url
+            ? redirect()->away($url)                               // Azure Single Logout
             : redirect(config('azure-sso.post_logout_redirect', '/'));
     }
 }
