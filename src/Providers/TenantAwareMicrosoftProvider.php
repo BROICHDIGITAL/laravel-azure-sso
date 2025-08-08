@@ -11,9 +11,9 @@ class TenantAwareMicrosoftProvider extends BaseProvider
      */
     protected function getAuthUrl($state): string
     {
-        $tenant = $this->getConfig('tenant', 'common');
+        $tenant = config('services.microsoft.tenant', 'common');
 
-        return $this->buildAuthUrlFromBase(          // ← neuer Methodenname
+        return $this->buildAuthUrlFromBase(
             "https://login.microsoftonline.com/{$tenant}/oauth2/v2.0/authorize",
             $this->getCodeFields($state)
         );
@@ -22,9 +22,10 @@ class TenantAwareMicrosoftProvider extends BaseProvider
     /**
      * Token-URL mit Tenant statt /common
      */
+
     protected function getTokenUrl(): string
     {
-        $tenant = $this->getConfig('tenant', 'common');
+        $tenant = config('services.microsoft.tenant', 'common');
 
         return "https://login.microsoftonline.com/{$tenant}/oauth2/v2.0/token";
     }
