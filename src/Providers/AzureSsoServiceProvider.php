@@ -20,48 +20,51 @@ class AzureSsoServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        /* -----------------------------------------------------------------
-         | 1) Config publizieren (optional für das Projekt)
-         |-----------------------------------------------------------------*/
+        /* --------------------------------------------------------------
+         | 1) Config publizieren (optional für Projekte)
+         |--------------------------------------------------------------*/
         $this->publishes([
             __DIR__ . '/../Config/azure-sso.php' => config_path('azure-sso.php'),
         ], 'config');
 
-        /* -----------------------------------------------------------------
+        /* --------------------------------------------------------------
          | 2) Routen laden
-         |-----------------------------------------------------------------*/
+         |--------------------------------------------------------------*/
         $this->loadRoutesFrom(__DIR__ . '/../../routes/web.php');
 
-        /* -----------------------------------------------------------------
+        /* --------------------------------------------------------------
          | 3) Middleware-Alias registrieren
-         |-----------------------------------------------------------------*/
+         |--------------------------------------------------------------*/
         $this->app->make(Router::class)
             ->aliasMiddleware(
                 'azure.tenant',
                 \Broichdigital\AzureSso\Middleware\ResolveAzureTenant::class
             );
 
-        /* -----------------------------------------------------------------
+        /* --------------------------------------------------------------
          | 4) Migrationen laden (falls vorhanden)
-         |-----------------------------------------------------------------*/
+         |--------------------------------------------------------------*/
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 
-        /* -----------------------------------------------------------------
-         | 5) Socialite-Provider registrieren
-         |-----------------------------------------------------------------*/
-        Socialite::extend('azure-sso', function () {
+        /* --------------------------------------------------------------
+         | 5) Socialite-Provider erst NACH vollständigem Boot registrieren
+         |--------------------------------------------------------------*/
+        $this->app->booted(function () {
             $cfg = config('azure-sso');
 
-            return Socialite::buildProvider(
-                TenantAwareMicrosoftProvider::class,           // ← neuer Provider
-                [
-                    'client_id'     => $cfg['client_id'],
-                    'client_secret' => $cfg['client_secret'],
-                    'redirect'      => $cfg['redirect'],
-                    'tenant'        => $cfg['tenant'] ?? $cfg['tenant_id'] ?? 'common',
-                    // optional: 'guzzle' => $cfg['guzzle'] ?? [],
-                ]
-            );
+            Socialite::extend('azure-sso', function () use ($cfg) {
+                return Socialite::buildProvider(
+                    TenantAwareMicrosoftProvider::class,
+                    [
+                        'client_id'     => $cfg['client_id'],
+                        'client_secret' => $cfg['client_secret'],
+                        'redirect'      => $cfg['redirect'],
+                        'tenant'        => $cfg['tenant'] ?? $cfg['tenant_id'] ?? 'common',
+                        // optional: 'guzzle' => $cfg['guzzle'] ?? [],
+                    ]
+                );
+            });
         });
     }
+
 }
