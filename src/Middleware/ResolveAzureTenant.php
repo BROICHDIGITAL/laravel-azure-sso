@@ -10,24 +10,22 @@ class ResolveAzureTenant
 {
     public function handle(Request $request, Closure $next)
     {
-        // Beispiel: Tenant per Query-Parameter:
-        $tenantKey = $request->query('tenant', null);
+        // Beispiel: Tenant-Profil per Query-Parameter wählen
+        $tenantKey = $request->query('tenant');
 
-        // Lade alle Tenant-Profile aus config (multi-tenant-ready):
         $profiles = config('azure-sso.tenants', []);
 
-        if ($tenantKey && isset($profiles[$tenantKey])) {
-            $cfg = $profiles[$tenantKey];
-        } else {
-            // Fallback auf Single-Tenant
-            $cfg = config('azure-sso');
-        }
+        $cfg = ($tenantKey && isset($profiles[$tenantKey]))
+            ? $profiles[$tenantKey]          // Multi-Tenant-Profil
+            : config('azure-sso');           // Default-Profil
 
-        // Runtime-Override der Socialite-Konfiguration:
+        /* ----------------------------------------------------------
+         | Laufende Socialite-Konfiguration überschreiben
+         |----------------------------------------------------------*/
         Config::set('services.microsoft.client_id',     $cfg['client_id']);
         Config::set('services.microsoft.client_secret', $cfg['client_secret']);
         Config::set('services.microsoft.redirect',      $cfg['redirect']);
-        Config::set('services.microsoft.tenant',        $cfg['tenant_id']);
+        Config::set('services.microsoft.tenant',        $cfg['tenant']);   // ← Korrektur
 
         return $next($request);
     }
