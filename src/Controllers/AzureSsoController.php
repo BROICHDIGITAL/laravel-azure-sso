@@ -2,7 +2,7 @@
 
 namespace Broichdigital\AzureSso\Controllers;
 
-use Platform\Core\Models;
+use Platform\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
