@@ -12,7 +12,7 @@ class AzureSsoController extends Controller
 {
     protected function provider()
     {
-        return Socialite::driver('azure-sso')
+        return Socialite::driver('azure-tenant')
             ->stateless()
             ->scopes(['openid', 'profile', 'email', 'offline_access'])
             ->with(['response_mode' => 'query']);
@@ -20,10 +20,11 @@ class AzureSsoController extends Controller
 
     public function redirectToProvider()
     {
-        \Log::debug('Azure SSO redirect', [
-            'authority' => config('azure-sso.authority'),
-            'redirect'  => config('azure-sso.redirect'),
-        ]);
+    \Log::debug('Azure SSO redirect', [
+        // passend zu deiner Config/Provider-Logik
+        'tenant'   => config('azure-sso.tenant') ?? config('azure-sso.tenant_id'),
+        'redirect' => config('azure-sso.redirect'),
+    ]);
 
         return $this->provider()->redirect();
     }
