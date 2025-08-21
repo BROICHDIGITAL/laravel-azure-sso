@@ -5,30 +5,37 @@ namespace Broichdigital\AzureSso\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
 
 class AzureSsoController extends Controller
 {
+    /**
+     * Socialite-Provider mit minimalen Scopes für reines SSO.
+     */
     protected function provider()
     {
         return Socialite::driver('azure-tenant')
             ->stateless()
-            ->scopes(['openid', 'profile', 'email', 'offline_access'])
+            ->scopes(['openid', 'profile', 'email'])
             ->with(['response_mode' => 'query']);
     }
 
+    /**
+     * Startet den Azure-Login-Flow.
+     */
     public function redirectToProvider()
     {
-    \Log::debug('Azure SSO redirect', [
-        // passend zu deiner Config/Provider-Logik
-        'tenant'   => config('azure-sso.tenant') ?? config('azure-sso.tenant_id'),
-        'redirect' => config('azure-sso.redirect'),
-    ]);
+        \Log::debug('Azure SSO redirect', [
+            'tenant'   => config('azure-sso.tenant') ?? config('azure-sso.tenant_id'),
+            'redirect' => config('azure-sso.redirect'),
+        ]);
 
         return $this->provider()->redirect();
     }
 
+    /**
+     * Callback: Azure-User abholen, lokalen User syncen, einloggen.
+     */
     public function handleProviderCallback(Request $request)
     {
         if ($request->has('error')) {
@@ -48,19 +55,17 @@ class AzureSsoController extends Controller
                 ->with('error', 'Azure SSO konnte nicht abgeschlossen werden (Token-Exchange).');
         }
 
-        $azureId   = $azureUser->getId(); // "sub"
-        $name      = $azureUser->getName() ?: ($azureUser->user['name'] ?? null);
-        $email     = $azureUser->getEmail()
-                      ?: ($azureUser->user['preferred_username'] ?? $azureUser->user['upn'] ?? null);
-        $avatar    = $azureUser->getAvatar();
-        $token     = $azureUser->token ?? null;
-        $refresh   = $azureUser->refreshToken ?? null;
-        $expiresIn = $azureUser->expiresIn   ?? null;
+        // Minimal nötige Profilinfos
+        $azureId = $azureUser->getId(); // i.d.R. "sub"
+        $name    = $azureUser->getName() ?: ($azureUser->user['name'] ?? null);
+        $email   = $azureUser->getEmail()
+                   ?: ($azureUser->user['preferred_username'] ?? $azureUser->user['upn'] ?? null);
+        $avatar  = $azureUser->getAvatar();
 
-        // User-Model dynamisch aus der Config
+        // User-Model aus Config (Standard: App\Models\User)
         $userModelClass = config('azure-sso.user_model', 'App\\Models\\User');
 
-        // Bestehenden Benutzer ermitteln (zuerst per azure_id, dann per email), sonst neuen bauen
+        // Bestehenden Benutzer finden (zuerst per azure_id, fallback per email)
         /** @var \Illuminate\Database\Eloquent\Model|\Illuminate\Contracts\Auth\Authenticatable $user */
         $user = $userModelClass::query()
             ->when($azureId, fn($q) => $q->where('azure_id', $azureId))
@@ -71,26 +76,29 @@ class AzureSsoController extends Controller
             $user = new $userModelClass();
         }
 
-        // KEIN Mass-Assignment: einzelne Properties setzen
-        $user->azure_id  = $azureId;
-        $user->name      = $name ?: ($user->name ?? $email ?? 'Azure User');
+        // KEIN Mass-Assignment: gezielt setzen (keine fillable-Anpassung nötig)
+        $user->azure_id = $azureId;
+        if ($name || !$user->name) {
+            $user->name = $name ?: ($email ?? 'Azure User');
+        }
         if ($email) {
             $user->email = $email;
         }
-        $user->avatar    = $avatar;
-        $user->access_token  = $token;
-        $user->refresh_token = $refresh;
-        $user->access_token_expires_at = $expiresIn ? now()->addSeconds((int) $expiresIn) : null;
+        if ($avatar) {
+            $user->avatar = $avatar;
+        }
 
-        DB::transaction(function () use ($user) {
-            $user->save();
-        });
+        $user->save();
 
+        // Einloggen (mit remember)
         Auth::login($user, true);
 
         return redirect()->intended(config('azure-sso.post_login_redirect', '/'));
     }
 
+    /**
+     * Logout (lokal) + optional Azure-Logout (falls konfiguriert).
+     */
     public function logout(Request $request)
     {
         Auth::logout();
