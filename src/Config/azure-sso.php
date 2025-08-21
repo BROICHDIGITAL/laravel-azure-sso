@@ -32,5 +32,8 @@ return [
         //     'redirect'      => env('AZURE_AD_PA_REDIRECT_URI'),
         //     'tenant_id'     => env('AZURE_AD_PA_TENANT_ID'),
         // ],
+
+    'user_model' => env('AZURE_SSO_USER_MODEL', 'App\\Models\\User'),
+    
     ],
 ];
