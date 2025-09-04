@@ -60,7 +60,7 @@ class AzureSsoController extends Controller
         $name    = $azureUser->getName() ?: ($azureUser->user['name'] ?? null);
         $email   = $azureUser->getEmail()
                    ?: ($azureUser->user['preferred_username'] ?? $azureUser->user['upn'] ?? null);
-        $avatar  = $azureUser->getAvatar();
+        // $avatar  = $azureUser->getAvatar();
 
         // User-Model aus Config (Standard: App\Models\User)
         $userModelClass = config('azure-sso.user_model', 'App\\Models\\User');
