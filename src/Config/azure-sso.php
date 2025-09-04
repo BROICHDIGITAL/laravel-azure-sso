@@ -21,19 +21,25 @@ return [
     // Ziel nach lokalem Logout
     'post_logout_redirect' => env('AZURE_SSO_POST_LOGOUT_REDIRECT', '/'),
 
-    'tenant'        => env('AZURE_AD_TENANT_ID', 'common'),
-    
-     // Für spätere Multi-Tenant-Support:
+    // Standard-Tenant (kann 'common' sein)
+    'tenant' => env('AZURE_AD_TENANT_ID', 'common'),
+
+    // Für späteren Multi-Tenant-Support:
     'tenants' => [
-        // 'default' => [ ... ],
+        // 'default' => [
+        //     'client_id'     => env('AZURE_AD_CLIENT_ID'),
+        //     'client_secret' => env('AZURE_AD_CLIENT_SECRET'),
+        //     'redirect'      => env('AZURE_AD_REDIRECT_URI'),
+        //     'tenant_id'     => env('AZURE_AD_TENANT_ID'),
+        // ],
         // 'partnerA' => [
         //     'client_id'     => env('AZURE_AD_PA_CLIENT_ID'),
         //     'client_secret' => env('AZURE_AD_PA_CLIENT_SECRET'),
         //     'redirect'      => env('AZURE_AD_PA_REDIRECT_URI'),
         //     'tenant_id'     => env('AZURE_AD_PA_TENANT_ID'),
         // ],
-
-    'user_model' => env('AZURE_SSO_USER_MODEL', 'App\\Models\\User'),
-    
     ],
+
+    // Eloquent User Model:
+    'user_model' => env('AZURE_SSO_USER_MODEL', 'App\\Models\\User'),
 ];
