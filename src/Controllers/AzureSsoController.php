@@ -84,9 +84,9 @@ class AzureSsoController extends Controller
         if ($email) {
             $user->email = $email;
         }
-        if ($avatar) {
-            $user->avatar = $avatar;
-        }
+        // if ($avatar) {
+        //    $user->avatar = $avatar;
+        // }
 
         $user->save();
 
