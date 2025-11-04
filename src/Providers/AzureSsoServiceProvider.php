@@ -28,6 +28,16 @@ class AzureSsoServiceProvider extends ServiceProvider
         ], 'config');
 
         /* --------------------------------------------------------------
+         | 1.5) Whitelist-Validierung: XOR-Logik prüfen
+         |--------------------------------------------------------------*/
+        $allowedDomains = config('azure-sso.allowed_domains', []);
+        $allowedTenants = config('azure-sso.allowed_tenants', []);
+        
+        if (!empty($allowedDomains) && !empty($allowedTenants)) {
+            \Log::warning('Azure SSO Config: Beide Whitelists (allowed_domains und allowed_tenants) sind gesetzt. Nur eine darf konfiguriert sein.');
+        }
+
+        /* --------------------------------------------------------------
          | 2) Routen laden
          |--------------------------------------------------------------*/
         $this->loadRoutesFrom(__DIR__ . '/../../routes/web.php');

@@ -42,4 +42,19 @@ return [
 
     // Eloquent User Model:
     'user_model' => env('AZURE_SSO_USER_MODEL', 'App\\Models\\User'),
+
+    // Whitelist für Multi-Tenant (optional - leer = alle erlaubt)
+    // WICHTIG: Nur eine der beiden Optionen darf gesetzt sein (XOR)
+    // Email-Domains: Komma-getrennt (z.B. "firma.de,partner.com")
+    'allowed_domains' => array_filter(
+        array_map('trim', explode(',', env('AZURE_SSO_ALLOWED_DOMAINS', '')))
+    ),
+
+    // Tenant-IDs: Komma-getrennt (z.B. "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa,bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+    'allowed_tenants' => array_filter(
+        array_map('trim', explode(',', env('AZURE_SSO_ALLOWED_TENANTS', '')))
+    ),
+
+    // Fehlermeldung bei nicht autorisiertem Zugriff
+    'unauthorized_message' => env('AZURE_SSO_UNAUTHORIZED_MESSAGE', 'Ihre Organisation ist nicht autorisiert.'),
 ];

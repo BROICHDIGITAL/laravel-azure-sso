@@ -62,6 +62,12 @@ class AzureSsoController extends Controller
                    ?: ($azureUser->user['preferred_username'] ?? $azureUser->user['upn'] ?? null);
         // $avatar  = $azureUser->getAvatar();
 
+        // Whitelist-Prüfung (entweder Domain- oder Tenant-ID-Filterung)
+        $authorizationCheck = $this->checkAuthorization($azureUser, $email);
+        if ($authorizationCheck !== null) {
+            return $authorizationCheck;
+        }
+
         // User-Model aus Config (Standard: App\Models\User)
         $userModelClass = config('azure-sso.user_model', 'App\\Models\\User');
 
@@ -94,6 +100,75 @@ class AzureSsoController extends Controller
         Auth::login($user, true);
 
         return redirect()->intended(config('azure-sso.post_login_redirect', '/'));
+    }
+
+    /**
+     * Prüft, ob der Benutzer über die Whitelist autorisiert ist.
+     * 
+     * @param mixed $azureUser Der Azure-Benutzer von Socialite
+     * @param string|null $email Die Email-Adresse des Benutzers
+     * @return \Illuminate\Http\RedirectResponse|null Redirect bei nicht autorisiertem Zugriff, null bei Erfolg
+     */
+    protected function checkAuthorization($azureUser, ?string $email)
+    {
+        $allowedDomains = config('azure-sso.allowed_domains', []);
+        $allowedTenants = config('azure-sso.allowed_tenants', []);
+        $unauthorizedMessage = config('azure-sso.unauthorized_message', 'Ihre Organisation ist nicht autorisiert.');
+
+        // Wenn beide leer sind, keine Prüfung (alle erlaubt)
+        if (empty($allowedDomains) && empty($allowedTenants)) {
+            return null;
+        }
+
+        // XOR-Logik: Nur eine der beiden Whitelists darf gesetzt sein
+        if (!empty($allowedDomains) && !empty($allowedTenants)) {
+            \Log::error('Azure SSO: Beide Whitelists (allowed_domains und allowed_tenants) sind gesetzt. Nur eine darf konfiguriert sein.');
+            return redirect()->route('azure-sso.login')
+                ->with('error', 'Konfigurationsfehler: Es darf nur eine Whitelist-Option gesetzt sein.');
+        }
+
+        // Email-Domain-Prüfung
+        if (!empty($allowedDomains)) {
+            if (!$email) {
+                \Log::warning('Azure SSO: Email fehlt für Domain-Prüfung');
+                return redirect()->route('azure-sso.login')
+                    ->with('error', $unauthorizedMessage);
+            }
+
+            $emailDomain = substr(strrchr($email, "@"), 1);
+            if (!in_array($emailDomain, $allowedDomains)) {
+                \Log::warning('Azure SSO: Unauthorized email domain', [
+                    'email' => $email,
+                    'domain' => $emailDomain,
+                    'allowed_domains' => $allowedDomains,
+                ]);
+                return redirect()->route('azure-sso.login')
+                    ->with('error', $unauthorizedMessage);
+            }
+        }
+
+        // Tenant-ID-Prüfung
+        if (!empty($allowedTenants)) {
+            $tenantId = $azureUser->user['tid'] ?? $azureUser->user['tenant_id'] ?? null;
+            
+            if (!$tenantId) {
+                \Log::warning('Azure SSO: Tenant-ID fehlt im Token');
+                return redirect()->route('azure-sso.login')
+                    ->with('error', $unauthorizedMessage);
+            }
+
+            if (!in_array($tenantId, $allowedTenants)) {
+                \Log::warning('Azure SSO: Unauthorized tenant', [
+                    'tenant_id' => $tenantId,
+                    'allowed_tenants' => $allowedTenants,
+                    'email' => $email,
+                ]);
+                return redirect()->route('azure-sso.login')
+                    ->with('error', $unauthorizedMessage);
+            }
+        }
+
+        return null; // Autorisiert
     }
 
     /**
