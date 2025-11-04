@@ -115,8 +115,22 @@ class AzureSsoController extends Controller
         $allowedTenants = config('azure-sso.allowed_tenants', []);
         $unauthorizedMessage = config('azure-sso.unauthorized_message', 'Ihre Organisation ist nicht autorisiert.');
 
+        // DEBUG: Ausführliches Logging
+        \Log::info('Azure SSO Authorization Check', [
+            'email' => $email,
+            'allowed_domains' => $allowedDomains,
+            'allowed_domains_count' => count($allowedDomains),
+            'allowed_domains_is_empty' => empty($allowedDomains),
+            'allowed_tenants' => $allowedTenants,
+            'allowed_tenants_count' => count($allowedTenants),
+            'allowed_tenants_is_empty' => empty($allowedTenants),
+            'env_raw' => env('AZURE_SSO_ALLOWED_DOMAINS'),
+            'config_azure_sso_allowed_domains' => config('azure-sso.allowed_domains'),
+        ]);
+
         // Wenn beide leer sind, keine Prüfung (alle erlaubt)
         if (empty($allowedDomains) && empty($allowedTenants)) {
+            \Log::warning('Azure SSO: Keine Whitelist konfiguriert - alle erlaubt');
             return null;
         }
 
@@ -136,6 +150,16 @@ class AzureSsoController extends Controller
             }
 
             $emailDomain = substr(strrchr($email, "@"), 1);
+            
+            // DEBUG: Domain-Extraktion loggen
+            \Log::info('Azure SSO Domain Check', [
+                'email' => $email,
+                'extracted_domain' => $emailDomain,
+                'allowed_domains' => $allowedDomains,
+                'in_array_result' => in_array($emailDomain, $allowedDomains),
+                'strict_compare' => in_array($emailDomain, $allowedDomains, true),
+            ]);
+            
             if (!in_array($emailDomain, $allowedDomains)) {
                 \Log::warning('Azure SSO: Unauthorized email domain', [
                     'email' => $email,
@@ -145,6 +169,11 @@ class AzureSsoController extends Controller
                 return redirect()->route('azure-sso.login')
                     ->with('error', $unauthorizedMessage);
             }
+            
+            \Log::info('Azure SSO: Domain authorized', [
+                'email' => $email,
+                'domain' => $emailDomain,
+            ]);
         }
 
         // Tenant-ID-Prüfung
